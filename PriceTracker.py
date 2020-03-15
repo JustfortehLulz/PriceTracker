@@ -2,12 +2,10 @@ import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
-import time
-#import sqlite3
+import os.path
+from os import path
+import sqlite3
 
-# skip sponsored products 
-
-ok = []
 
 productName = input("what item: ")
 
@@ -19,7 +17,6 @@ driver.maximize_window()
 title = productName
 
 # CAN websites
-
 ## For Amazon website
 
 driver.get("https://www.amazon.ca/")
@@ -45,91 +42,119 @@ text = driver.find_element_by_name("Search")
 text.send_keys(productName)
 text.send_keys(Keys.RETURN)
 
-#button = driver.find_element_by_xpath("//div[@class='c-shca-icon-item__body-name']")
-#button.click()
 
 meLink = driver.current_url
-## Amazon link
 
-### amazon links
-#amazon = ['https://www.amazon.ca/dp/B07B41WS48?tag=pcp0f-20&linkCode=ogi&th=1&psc=1','https://www.amazon.ca/dp/B07XPZMKQ6?tag=pcp0f-20&linkCode=ogi&th=1&psc=1','https://www.amazon.ca/dp/B0143UM4TC?tag=pcp0f-20&linkCode=ogi&th=1&psc=1',
-#         'https://www.amazon.ca/dp/B0786QNS9B?tag=pcp0f-20&linkCode=ogi&th=1&psc=1','https://www.amazon.ca/dp/B075QJTBVT?tag=pcp0f-20&linkCode=ogi&th=1&psc=1','https://www.amazon.ca/dp/B07RJGK1PW?tag=pcp0f-20&linkCode=ogi&th=1&psc=1',
-#         'https://www.amazon.ca/dp/B071G4KDKG?tag=pcp0f-20&linkCode=ogi&th=1&psc=1','https://www.amazon.ca/dp/B00IUQRPQS?tag=pcp0f-20&linkCode=ogi&th=1&psc=1','https://www.amazon.ca/dp/B00H3T1KBE?tag=pcp0f-20&linkCode=ogi&th=1&psc=1']
+### product dictionary
+# product[0] = name
+# product[1] = price
+# product[2] = website
+# product[3] = link
 
+productA = {}
+productCC = {}
+productME = {}
 
-print("Amazon price")
+############################################################# Amazon Canada #############################################################
 
+print("\nAmazon Prices")
+numberA = 0
 page = requests.get(amazonLink, headers=headers)
 soup = BeautifulSoup(page.content, 'html.parser')
 for elem in soup.find_all("div", {"class" : "s-include-content-margin s-border-bottom"}):
+	link = elem.find("a" , {"class" : "a-link-normal a-text-normal"})
+	link = link.get('href')
+	link = "https://www.amazon.ca" + link
 	product = elem.find("a" , {"class" :  "a-link-normal a-text-normal"})
 	productName = product.find("span" , {"class" : "a-size-medium a-color-base a-text-normal"})
-	priceWhole = elem.find("span" , {"class" : "a-offscreen"}).get_text().strip()
-	# priceFraction = elem.find("span" , {"class" : "a-price-fraction"}).get_text().strip()
-	print(productName.get_text().strip())
-	print(priceWhole)
-
+	Name = productName.get_text().strip()
+	priceWhole = elem.find("span" , {"class" : "a-offscreen"})
+	price = priceWhole.get_text().strip()
+	print(str(numberA) + ": " + Name)
+	print(price)
+	print(link)
+	print()
+	productA[numberA] = [Name,price,"AmazonCanada",link]
+	numberA += 1
 print()
 
+############################################################# Canada Computers #############################################################
 
 print("Canada Computers Prices")
 
 page = requests.get(ccLink, headers=headers)
 soup = BeautifulSoup(page.content, 'html.parser')
 
-number = 1
+numberCC = numberA
 for elem in soup.find_all("div" , {"class" : "px-0 col-12 productInfoSearch pt-2"}):
+	link = elem.find("a" , {"class" : "text-dark text-truncate_3"})
+	link = link.get('href')
 	productName = elem.find("span" , {"class" : "text-dark d-block productTemplate_title"}).get_text().strip()
 	price = elem.find("span" , {"class" : "d-block mb-0 pq-hdr-product_price line-height"})
 	if (price == None):
 		price = elem.find("span" , {"class" : "text-danger d-block mb-0 pq-hdr-product_price line-height"})
-	print(productName)
-	print(price.get_text().strip())
-	# productName = elem.find("span" , {"class" : "text-dark d-block productTemplate_title"}).get_text().strip()
-	# price = elem.find("span" , {"class" : "d-block mb-0 pq-hdr-product_price line-height"}).get_text().strip()
-	# print(productName)
-	# print(price)
-# titleCC = soup.find("h1", {"class" : "h3 product-title mb-2"}).get_text().strip()
-# priceString = soup.find("span", {"class" : "h2-big"}).get_text()
-# priceString = priceString[2:-1]
-
-#print(titleCC)
-#print(priceString)
+	realPrice = price.get_text().strip()
+	print(str(numberCC) + ": " + productName)
+	print(realPrice)
+	print(link)
+	print()
+	productCC[numberCC] = [productName, realPrice, "CanadaComputers",link]
+	numberCC += 1
 print()
-############################################################# Memory Express
-
-productsME = []
-pricesME = []
+############################################################# Memory Express #############################################################
 
 print("Memory Express Prices")
 
 page = requests.get(meLink,headers=headers)
 soup = BeautifulSoup(page.content,'html.parser')
 
-### grabs the entire list of products with similar name
-### selects a number 
-# for elem in soup.find_all("div",{"class" : "c-shca-icon-item__body-name"}):
-# 	print(elem.find('a')['href'])
-# 	print(str(number) + ": " + elem.find('a').get_text().strip())
-
-# for elem in soup.find_all("div", {"class": "c-shca-icon-item__summary-list"}):
-# 	print(elem.find("span").get_text().strip())
-number = 1
+numberME = numberCC
 for elem in soup.find_all("div" , {"class" : "c-shca-icon-item"}):
-	#print(elem.find("span").get_text().strip())
-	productName = elem.find("div" , {"class" : "c-shca-icon-item__body-name"})
-	
+	link = elem.find("a")
+	link = link.get('href')
+	link = "https://www.memoryexpress.com" + link
+	productElem = elem.find("div" , {"class" : "c-shca-icon-item__body-name"})
+	productName = productElem.find('a').get_text().strip()
 	priceElem = elem.find("div" , {"class" : "c-shca-icon-item__summary"})
-	price = priceElem.find("div", {"class": "c-shca-icon-item__summary-list"})
-	print(str(number) + ": " + productName.find('a').get_text().strip() + " " + price.find("span").get_text().strip())
+	priceVal = priceElem.find("div", {"class": "c-shca-icon-item__summary-list"})
+	price = priceVal.find("span").get_text().strip()
+	print(str(numberME) + ": " + productName)
+	print(price)
+	print(link)
 	print()
-	number += 1
+	productME[numberME] = [productName,price,"MemoryExpress",link]
+	numberME += 1
 
 driver.quit()
 
+selectedProductNum = input("Which product would you like?(Please enter the number of the product): ")
+selectedProductNum = int(selectedProductNum)
 
 ### insert values into database
-# conn = sqlite3.connect('ProductPrices.db')
 
-# c = conn.cursor()
+if(path.exists("ProductPrices.db")):
+	conn = sqlite3.connect('ProductPrices.db')
+	c = conn.cursor()
+else:
+	createTable = """CREATE TABLE IF NOT EXISTS Products (
+                                    ProductName text,
+                                    price integer,
+                                    website text,
+                                    link text
+                                );"""
+	conn = sqlite3.connect('ProductPrices.db')
+	c = conn.cursor()
+	c.execute(createTable)
 
+
+if (selectedProductNum <= numberA):
+	c.execute("INSERT INTO Products (ProductName, price, website, link) VALUES(?,?,?,?)",(productA[selectedProductNum][0],productA[selectedProductNum][1],productA[selectedProductNum][2],productA[selectedProductNum][3]))
+
+elif (selectedProductNum <= numberCC and selectedProductNum > numberA):
+	c.execute("INSERT INTO Products (ProductName, price, website, link) VALUES(?,?,?,?)",(productCC[selectedProductNum][0],productCC[selectedProductNum][1],productCC[selectedProductNum][2],productCC[selectedProductNum][3]))
+
+elif (selectedProductNum <= numberME and selectedProductNum > numberCC):
+	c.execute("INSERT INTO Products (ProductName, price, website, link) VALUES(?,?,?,?)",(productME[selectedProductNum][0],productME[selectedProductNum][1],productME[selectedProductNum][2],productME[selectedProductNum][3]))
+
+conn.commit()
+conn.close()
